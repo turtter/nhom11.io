@@ -5,3 +5,11 @@ opencv-python-headless
 numpy
 Pillow
 matplotlib
+streamlit
+numpy
+Pillow
+scikit-image
+scikit-learn
+matplotlib
+seaborn
+tqdm
