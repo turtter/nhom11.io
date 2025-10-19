@@ -120,7 +120,7 @@ def load_model_hog():
     if not os.path.exists(MODEL_PATH):
         st.error(f"Lỗi: Không tìm thấy file model HOG tại '{MODEL_PATH}'")
         st.error("Vui lòng đảm bảo file model đã được đẩy lên GitHub và nằm trong thư mục 'outputs'.")
-        st.stop()  # Dừng ứng dụng
+        return None  # Trả về None nếu lỗi
 
     print(f"Đang tải model HOG từ {MODEL_PATH}...")
     try:
@@ -128,13 +128,9 @@ def load_model_hog():
             model_data = pickle.load(f)
         print("Tải model HOG thành công.")
         return model_data
-    except FileNotFoundError:
-        st.error(f"Lỗi FileNotFoundError: Không tìm thấy file model HOG tại '{MODEL_PATH}'.")
-        st.error("Hãy kiểm tra lại đường dẫn và đảm bảo file đã được commit lên GitHub.")
-        st.stop()
     except Exception as e:
         st.error(f"Lỗi khi tải model HOG: {e}")
-        st.stop()
+        return None # Trả về None nếu lỗi
 
 
 # 2.3️⃣ --- Hàm tính Softmax (Lấy từ file train) ---
@@ -183,104 +179,89 @@ def extract_hog_features(img_pil):
 
 
 # ======================================================================
-# 5️⃣ Giao diện Streamlit Chính (Sử dụng Tabs)
+# 5️⃣ Giao diện Streamlit Chính (Xử lý đồng thời)
 # ======================================================================
 st.set_page_config(layout="wide", page_title="Phone Analysis App")
 
-st.title("📱 Ứng dụng Phân tích Điện thoại")
-st.write("Sử dụng tab bên dưới để chọn mô hình bạn muốn dùng.")
+st.title("📱 Ứng dụng Phân tích Điện thoại (Chạy song song 2 Model)")
+st.write("Tải lên **MỘT** ảnh, cả hai mô hình sẽ cùng lúc xử lý và trả kết quả.")
 
-tab1, tab2 = st.tabs([
-    "Mô hình 1: Phát hiện Lỗi (Faster R-CNN)",
-    "Mô hình 2: Phân loại (HOG + Histogram)"
-])
+# --- Tải cả hai model lên trước ---
+model_rcnn, device_rcnn = get_model_fasterrcnn()
+model_data_hog = load_model_hog()
 
-# --- Giao diện cho Tab 1: Faster R-CNN ---
-with tab1:
-    st.header("1️⃣ Phát hiện Lỗi Điện thoại (3 lớp)")
-    st.write("Tải lên ảnh điện thoại để mô hình phân loại: **KHÔNG LỖI**, **BỊ LỖI**, hoặc **KHÔNG PHÁT HIỆN RA ĐIỆN THOẠI**.")
+# --- Tạo 1 file uploader duy nhất ---
+uploaded_file = st.file_uploader("📤 Chọn một ảnh duy nhất", type=["jpg", "jpeg", "png"])
 
-    # Tải model 1
-    model_rcnn, device_rcnn = get_model_fasterrcnn()
+if uploaded_file is not None:
+    # Mở ảnh MỘT LẦN. Dùng .convert("RGB") để đảm bảo 3 kênh cho R-CNN
+    # Hàm HOG tự xử lý được ảnh này.
+    image_pil = Image.open(uploaded_file).convert("RGB")
 
+    # Tạo 2 cột để hiển thị kết quả
     col1, col2 = st.columns(2)
 
+    # --- Xử lý Model 1 (Faster R-CNN) trong Cột 1 ---
     with col1:
-        # Thêm key="uploader1" để phân biệt với uploader ở tab 2
-        uploaded_file_1 = st.file_uploader("📤 Chọn một ảnh (Model 1)", type=["jpg", "jpeg", "png"], key="uploader1")
+        st.header("1. Model Phát hiện Lỗi (Faster R-CNN)")
+        with st.spinner("Model 1 đang xử lý..."):
+            # Dùng image_pil.copy() để đảm bảo an toàn
+            detection_status, result_image = predict_for_webapp(model_rcnn, device_rcnn, image_pil.copy(), score_thresh=0.6)
 
+            # Hiển thị kết quả Model 1
+            if detection_status == "DEFECTIVE":
+                st.error("❌ **KẾT QUẢ: PHÁT HIỆN LỖI (VỠ/BẨN)**")
+            elif detection_status == "NON_DEFECTIVE":
+                st.success("✅ **KẾT QUẢ: KHÔNG LỖI**")
+            elif detection_status == "NO_PHONE":
+                st.warning("⚠️ **KẾT QUẢ: KHÔNG PHÁT HIỆN ĐT**")
+
+            st.image(result_image, caption="Kết quả Faster R-CNN", use_container_width=True)
+
+    # --- Xử lý Model 2 (HOG + Softmax) trong Cột 2 ---
     with col2:
-        st.write("### 🔍 Kết quả dự đoán (Model 1)")
+        st.header("2. Model Phân loại (HOG + Histogram)")
+        
+        # Chỉ xử lý nếu model HOG đã được tải thành công
+        if model_data_hog is not None:
+            with st.spinner("Model 2 đang xử lý..."):
+                # Giải nén các thành phần model HOG
+                W = model_data_hog["W"]
+                b = model_data_hog["b"]
+                mean = model_data_hog["mean"]
+                std = model_data_hog["std"]
+                label_map = model_data_hog["label_map"]
+                inv_label_map = {v: k for k, v in label_map.items()}
 
-        if uploaded_file_1 is not None:
-            image_1 = Image.open(uploaded_file_1).convert("RGB")
-            with st.spinner("Đang xử lý (Model 1)..."):
-                detection_status, result_image = predict_for_webapp(model_rcnn, device_rcnn, image_1, score_thresh=0.6)
-
-                if detection_status == "DEFECTIVE":
-                    st.error("❌ **KẾT QUẢ: PHÁT HIỆN ĐIỆN THOẠI BỊ LỖI (VỠ hoặc BẨN )**")
-                elif detection_status == "NON_DEFECTIVE":
-                    st.success("✅ **KẾT QUẢ: ĐIỆN THOẠI KHÔNG LỖI**")
-                elif detection_status == "NO_PHONE":
-                    st.warning("⚠️ **KẾT QUẢ: KHÔNG PHÁT HIỆN RA ĐIỆN THOẠI**")
-
-                st.image(result_image, caption="Ảnh Kết Quả (Model 1)", use_container_width=True)
-        else:
-            st.info("⬆️ Hãy tải một ảnh lên cho Model 1 để xem kết quả.")
-
-
-# --- Giao diện cho Tab 2: HOG + Softmax ---
-with tab2:
-    st.header("2️⃣ Phân loại ảnh điện thoại (HOG + Histogram)")
-    
-    # Tải model 2
-    model_data_hog = load_model_hog()
-
-    # Lấy các thành phần từ model
-    W = model_data_hog["W"]
-    b = model_data_hog["b"]
-    mean = model_data_hog["mean"]
-    std = model_data_hog["std"]
-    label_map = model_data_hog["label_map"]
-    inv_label_map = {v: k for k, v in label_map.items()}
-
-    # 1. Tạo nút tải file (Thêm key="uploader2")
-    uploaded_file_2 = st.file_uploader("Chọn một ảnh để dự đoán (Model 2):",
-                                     type=["jpg", "jpeg", "png", "bmp"],
-                                     key="uploader2")
-
-    if uploaded_file_2 is not None:
-        # 2. Hiển thị ảnh
-        img_pil_2 = Image.open(uploaded_file_2)
-        st.image(img_pil_2, caption="Ảnh đã tải lên", use_column_width=True)
-
-        # 3. Tạo nút dự đoán
-        if st.button("Dự đoán (Model 2)", key="button2"):
-            # 4. Xử lý và dự đoán
-            with st.spinner("Đang trích xuất đặc trưng và dự đoán (Model 2)..."):
-                features = extract_hog_features(img_pil_2)
+                # Dùng image_pil.copy()
+                features = extract_hog_features(image_pil.copy())
 
                 if features is None:
                     st.error("Không thể xử lý ảnh này.")
                 else:
-                    # Chuẩn hóa đặc trưng
-                    features_2d = features.reshape(1, -1)  # -> (1, 852)
+                    features_2d = features.reshape(1, -1)
+                    
+                    # Hiển thị ảnh gốc (vì model này không vẽ bounding box)
+                    st.image(image_pil, caption="Ảnh gốc cho Model 2", use_container_width=True)
 
-                    # Kiểm tra kích thước trước khi chuẩn hóa
                     if features_2d.shape[1] != mean.shape[1]:
                         st.error(
-                            f"Lỗi kích thước đặc trưng! Model mong đợi {mean.shape[1]}, nhưng nhận được {features_2d.shape[1]}.")
+                            f"Lỗi kích thước! Model HOG cần {mean.shape[1]}, nhận được {features_2d.shape[1]}.")
                     else:
+                        # Chuẩn hóa và dự đoán
                         features_std = (features_2d - mean) / (std + 1e-12)
-
-                        # Dự đoán
                         scores = features_std @ W + b
                         probs = softmax_np(scores)
-
                         pred_index = np.argmax(probs, axis=1)[0]
                         prediction_label = inv_label_map[pred_index]
                         probability = np.max(probs) * 100
 
-                        # 5. Hiển thị kết quả
+                        # Hiển thị kết quả Model 2
                         st.success(f"**Kết quả (Model 2):** '{prediction_label}'")
                         st.info(f"**Độ tin cậy:** {probability:.2f}%")
+        else:
+            st.error("Không thể chạy Model 2 do lỗi tải model. (Kiểm tra file 'softmax_model_hog_hist.pkl')")
+
+else:
+    # Thông báo chờ
+    st.info("⬆️ Hãy tải một ảnh lên để cả hai mô hình cùng phân tích.")
