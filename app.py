@@ -177,8 +177,8 @@ if uploaded_file is not None:
     with st.spinner("Model 1 (Faster R-CNN) đang xử lý..."):
         detection_status = predict_for_webapp(model_rcnn, device_rcnn, image_pil.copy(), score_thresh=0.6)
         
-        # Format kết quả Model 1
-        result_text_1 = "### 1. Model Phát hiện Lỗi: "
+        # Format kết quả Model 1 (ĐÃ SỬA TÊN)
+        result_text_1 = "### 1. Model Faster R-CNN: "
         if detection_status == "DEFECTIVE":
             result_text_1 += "❌ **PHÁT HIỆN LỖI (VỠ/BẨN)**"
         elif detection_status == "NON_DEFECTIVE":
@@ -190,7 +190,7 @@ if uploaded_file is not None:
         result_placeholder_1.markdown(result_text_1)
 
     # --- Xử lý Model 2 (HOG + Softmax) ---
-    with st.spinner("Model 2 (HOG) đang xử lý..."):
+    with st.spinner("Model 2 (Softmax regression) đang xử lý..."):
         if model_data_hog is not None:
             # Giải nén các thành phần model HOG
             W = model_data_hog["W"]
@@ -202,7 +202,8 @@ if uploaded_file is not None:
 
             features = extract_hog_features(image_pil.copy())
             
-            result_text_2 = "### 2. Model Phân loại (HOG): "
+            # Format kết quả Model 2 (ĐÃ SỬA TÊN)
+            result_text_2 = "### 2. Model Softmax regression: "
             if features is None:
                 result_text_2 += "🚫 *Không thể xử lý ảnh này.*"
             else:
@@ -224,7 +225,7 @@ if uploaded_file is not None:
             # Đẩy kết quả vào placeholder 2
             result_placeholder_2.markdown(result_text_2)
         else:
-            result_placeholder_2.error("### 2. Model Phân loại (HOG): Lỗi tải model.")
+            result_placeholder_2.error("### 2. Model Softmax regression: Lỗi tải model.")
 
 else:
     # Thông báo chờ
