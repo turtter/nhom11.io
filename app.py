@@ -26,8 +26,6 @@ def load_model_fasterrcnn(weight_path):
     num_classes = 4  # 3 lớp + 1 background
     in_features = model.roi_heads.box_predictor.cls_score.in_features
     model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
-
-    # Load trọng số huấn luyện
     state_dict = torch.load(weight_path, map_location="cpu")
     model.load_state_dict(state_dict)
     model.eval()
@@ -45,7 +43,7 @@ def get_model_fasterrcnn():
     return model, device
 
 
-# 1.3️⃣ Hàm dự đoán cho Web App
+# 1.3️⃣ Hàm dự đoán cho Web App (Chỉ trả về STATUS)
 def predict_for_webapp(model, device, image_pil, score_thresh=0.6):
     transform = T.ToTensor()
     img_tensor = transform(image_pil).unsqueeze(0).to(device)
@@ -53,11 +51,6 @@ def predict_for_webapp(model, device, image_pil, score_thresh=0.6):
     with torch.no_grad():
         outputs = model(img_tensor)[0]
         
-    # Thay đổi: Không cần vẽ lên ảnh, chỉ cần logic kết luận
-    # image_with_boxes = image_pil.copy()
-    # draw = ImageDraw.Draw(image_with_boxes)
-
-    label_map = {1: "KHÔNG LỖI", 2: "BỊ LỖI", 3: "KHÔNG PHẢI ĐIỆN THOẠI"}
     has_detection = False
     found_defect = False
     found_nonphone = False
@@ -71,7 +64,7 @@ def predict_for_webapp(model, device, image_pil, score_thresh=0.6):
             elif label_id == 3:
                 found_nonphone = True
 
-    # 1.4️⃣ Logic kết luận (Không trả về ảnh nữa)
+    # 1.4️⃣ Logic kết luận (Không trả về ảnh)
     if not has_detection or found_nonphone:
         return "NO_PHONE"
     elif found_defect:
@@ -147,12 +140,12 @@ def extract_hog_features(img_pil):
 
 
 # ======================================================================
-# 5️⃣ Giao diện Streamlit Chính (Chỉ hiện ảnh gốc)
+# 5️⃣ Giao diện Streamlit Chính (Kết quả lên đầu)
 # ======================================================================
 st.set_page_config(layout="wide", page_title="Phone Analysis App")
 
 st.title("📱 Ứng dụng Phân tích Điện thoại")
-st.write("Tải lên một ảnh, cả hai mô hình sẽ cùng phân tích và chỉ hiển thị kết quả.")
+st.write("Tải lên một ảnh, cả hai mô hình sẽ cùng phân tích và hiển thị kết quả ngay bên dưới.")
 
 # --- Tải cả hai model lên trước ---
 model_rcnn, device_rcnn = get_model_fasterrcnn()
@@ -165,71 +158,73 @@ if uploaded_file is not None:
     # Mở ảnh MỘT LẦN
     image_pil = Image.open(uploaded_file).convert("RGB")
 
-    # --- HIỂN THỊ ẢNH GỐC (Theo yêu cầu) ---
+    # --- HIỂN THỊ KẾT QUẢ (Theo yêu cầu) ---
+    st.header("🔍 Kết Quả Phân Tích")
+    
+    # Tạo 2 dòng trống để chứa kết quả
+    # Chúng sẽ được lấp đầy sau khi model chạy xong
+    result_placeholder_1 = st.empty()
+    result_placeholder_2 = st.empty()
+
+    # Thêm một đường kẻ
+    st.divider() 
+
+    # --- HIỂN THỊ ẢNH GỐC (Bên dưới kết quả) ---
     st.header("🖼️ Ảnh Gốc Đã Tải Lên")
     st.image(image_pil, caption="Ảnh gốc", use_container_width=True)
     
-    # Thêm một đường kẻ để phân tách
-    st.divider() 
-
-    # --- Tạo 2 cột để hiển thị kết quả VĂN BẢN ---
-    col1, col2 = st.columns(2)
-
-    # --- Xử lý Model 1 (Faster R-CNN) trong Cột 1 ---
-    with col1:
-        st.header("1. Model Phát hiện Lỗi (Faster R-CNN)")
-        with st.spinner("Model 1 đang xử lý..."):
-            
-            # Hàm predict đã được sửa để chỉ trả về status
-            detection_status = predict_for_webapp(model_rcnn, device_rcnn, image_pil.copy(), score_thresh=0.6)
-
-            # Hiển thị kết quả Model 1
-            if detection_status == "DEFECTIVE":
-                st.error("❌ **KẾT QUẢ: PHÁT HIỆN LỖI (VỠ/BẨN)**")
-            elif detection_status == "NON_DEFECTIVE":
-                st.success("✅ **KẾT QUẢ: KHÔNG LỖI**")
-            elif detection_status == "NO_PHONE":
-                st.warning("⚠️ **KẾT QUẢ: KHÔNG PHÁT HIỆN ĐT**")
-
-    # --- Xử lý Model 2 (HOG + Softmax) trong Cột 2 ---
-    with col2:
-        st.header("2. Model Phân loại (HOG + Histogram)")
+    # --- Xử lý Model 1 (Faster R-CNN) ---
+    with st.spinner("Model 1 (Faster R-CNN) đang xử lý..."):
+        detection_status = predict_for_webapp(model_rcnn, device_rcnn, image_pil.copy(), score_thresh=0.6)
         
-        # Chỉ xử lý nếu model HOG đã được tải thành công
+        # Format kết quả Model 1
+        result_text_1 = "### 1. Model Phát hiện Lỗi: "
+        if detection_status == "DEFECTIVE":
+            result_text_1 += "❌ **PHÁT HIỆN LỖI (VỠ/BẨN)**"
+        elif detection_status == "NON_DEFECTIVE":
+            result_text_1 += "✅ **KHÔNG LỖI**"
+        elif detection_status == "NO_PHONE":
+            result_text_1 += "⚠️ **KHÔNG PHÁT HIỆN ĐT**"
+        
+        # Đẩy kết quả vào placeholder 1
+        result_placeholder_1.markdown(result_text_1)
+
+    # --- Xử lý Model 2 (HOG + Softmax) ---
+    with st.spinner("Model 2 (HOG) đang xử lý..."):
         if model_data_hog is not None:
-            with st.spinner("Model 2 đang xử lý..."):
-                # Giải nén các thành phần model HOG
-                W = model_data_hog["W"]
-                b = model_data_hog["b"]
-                mean = model_data_hog["mean"]
-                std = model_data_hog["std"]
-                label_map = model_data_hog["label_map"]
-                inv_label_map = {v: k for k, v in label_map.items()}
+            # Giải nén các thành phần model HOG
+            W = model_data_hog["W"]
+            b = model_data_hog["b"]
+            mean = model_data_hog["mean"]
+            std = model_data_hog["std"]
+            label_map = model_data_hog["label_map"]
+            inv_label_map = {v: k for k, v in label_map.items()}
 
-                features = extract_hog_features(image_pil.copy())
-
-                if features is None:
-                    st.error("Không thể xử lý ảnh này.")
+            features = extract_hog_features(image_pil.copy())
+            
+            result_text_2 = "### 2. Model Phân loại (HOG): "
+            if features is None:
+                result_text_2 += "🚫 *Không thể xử lý ảnh này.*"
+            else:
+                features_2d = features.reshape(1, -1)
+                if features_2d.shape[1] != mean.shape[1]:
+                    result_text_2 += f"🚫 *Lỗi kích thước! (Cần {mean.shape[1]}, nhận được {features_2d.shape[1]})*"
                 else:
-                    features_2d = features.reshape(1, -1)
+                    # Chuẩn hóa và dự đoán
+                    features_std = (features_2d - mean) / (std + 1e-12)
+                    scores = features_std @ W + b
+                    probs = softmax_np(scores)
+                    pred_index = np.argmax(probs, axis=1)[0]
+                    prediction_label = inv_label_map[pred_index]
+                    probability = np.max(probs) * 100
                     
-                    if features_2d.shape[1] != mean.shape[1]:
-                        st.error(
-                            f"Lỗi kích thước! Model HOG cần {mean.shape[1]}, nhận được {features_2d.shape[1]}.")
-                    else:
-                        # Chuẩn hóa và dự đoán
-                        features_std = (features_2d - mean) / (std + 1e-12)
-                        scores = features_std @ W + b
-                        probs = softmax_np(scores)
-                        pred_index = np.argmax(probs, axis=1)[0]
-                        prediction_label = inv_label_map[pred_index]
-                        probability = np.max(probs) * 100
-
-                        # Hiển thị kết quả Model 2
-                        st.success(f"**Kết quả (Model 2):** '{prediction_label}'")
-                        st.info(f"**Độ tin cậy:** {probability:.2f}%")
+                    # Format kết quả Model 2
+                    result_text_2 += f"**'{prediction_label}'** (Độ tin cậy: {probability:.2f}%)"
+            
+            # Đẩy kết quả vào placeholder 2
+            result_placeholder_2.markdown(result_text_2)
         else:
-            st.error("Không thể chạy Model 2 do lỗi tải model.")
+            result_placeholder_2.error("### 2. Model Phân loại (HOG): Lỗi tải model.")
 
 else:
     # Thông báo chờ
