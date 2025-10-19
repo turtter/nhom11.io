@@ -13,3 +13,10 @@ scikit-learn
 matplotlib
 seaborn
 tqdm
+streamlit
+torch
+scikit-learn
+scikit-image
+opencv-python-headless
+Pillow
+numpy
