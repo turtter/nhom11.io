@@ -20,3 +20,12 @@ scikit-image
 opencv-python-headless
 Pillow
 numpy
+streamlit
+torch
+torchvision
+numpy
+pillow
+matplotlib
+scikit-learn
+joblib
+seaborn
