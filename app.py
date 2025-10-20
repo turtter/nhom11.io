@@ -143,7 +143,7 @@ def extract_features_svm(img_pil):
 def load_model_rf():
     # Sử dụng đường dẫn tuyệt đối
     rf_path = os.path.join(BASE_DIR, "rf_clean.pkl")
-    scaler_path = os.path.join(BASE_DIR, "scaler_clean.pkl")
+    scaler_path = os.path.join(BASE_DIR, "scaler.pkl")
     
     if not os.path.exists(rf_path):
         st.error(f"Lỗi Model 4: Không tìm thấy file '{rf_path}'.")
