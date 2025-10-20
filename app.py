@@ -158,6 +158,10 @@ def load_model_rf():
         scaler = joblib.load(scaler_path)
         print("✅ Model 4 (Random Forest) loaded.")
         return rf, scaler
+    except ModuleNotFoundError as e:
+        st.error(f"Lỗi khi tải Model 4: {e}")
+        st.error("Lỗi này xảy ra vì tệp .pkl được tạo bằng một module tùy chỉnh không có trong môi trường hiện tại. Vui lòng đảm bảo bạn có module 'ml_models' hoặc tạo lại tệp .pkl mà không có dependency này.")
+        return None, None
     except Exception as e:
         st.error(f"Lỗi khi tải Model 4: {e}")
         return None, None
