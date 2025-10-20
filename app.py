@@ -19,7 +19,7 @@ import joblib
 
 
 RF_MODEL_PATH = "rf_clean.pkl"
-SCALER_PATH = "scaler_clean.pkl"
+SCALER_PATH = "scaler.pkl"
 
 # ======================================================================
 # MODEL 1: FASTER R-CNN
@@ -138,9 +138,9 @@ def extract_features_svm(img_pil):
 @st.cache_resource
 def load_model_rf():
     rf_path = "rf_clean.pkl"
-    scaler_path = "scaler_clean.pkl"
+    scaler_path = "scaler_.pkl"
     if not os.path.exists(rf_path) or not os.path.exists(scaler_path):
-        st.error("Lỗi Model 4: Không tìm thấy file 'rf_clean.pkl' hoặc 'scaler_clean.pkl'.")
+        st.error("Lỗi Model 4: Không tìm thấy file 'rf_clean.pkl' hoặc 'scalerpkl'.")
         return None, None
     try:
         rf = joblib.load(rf_path)
