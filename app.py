@@ -16,19 +16,17 @@ import torch.nn as nn
 from torchvision import models
 import joblib
 
-# ======================================================================
-# GIẢI PHÁP MỚI: TÌM ĐƯỜNG DẪN TUYỆT ĐỐI ĐẾN THƯ MỤC CHỨA SCRIPT
-# ======================================================================
-# Lấy đường dẫn đến thư mục chứa file app.py này
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+
+RF_MODEL_PATH = "rf_clean.pkl"
+SCALER_PATH = "scaler_clean.pkl"
 
 # ======================================================================
 # MODEL 1: FASTER R-CNN
 # ======================================================================
 @st.cache_resource
 def get_model_fasterrcnn():
-    # Sử dụng đường dẫn tuyệt đối
-    model_path = os.path.join(BASE_DIR, "fasterrcnn_phone_defect1910.pth")
+    model_path = "fasterrcnn_phone_defect1910.pth"
     model = torchvision.models.detection.fasterrcnn_resnet50_fpn(weights=FasterRCNN_ResNet50_FPN_Weights.COCO_V1)
     num_classes = 4
     in_features = model.roi_heads.box_predictor.cls_score.in_features
@@ -66,8 +64,7 @@ def predict_fasterrcnn(model, device, image_pil, score_thresh=0.6):
 # ======================================================================
 @st.cache_resource
 def load_model_softmax():
-    # Sử dụng đường dẫn tuyệt đối
-    model_path = os.path.join(BASE_DIR, "outputs", "softmax_model_hog_hist.pkl")
+    model_path = os.path.join("outputs", "softmax_model_hog_hist.pkl")
     if not os.path.exists(model_path):
         st.error(f"Lỗi Model 2: Không tìm thấy file '{model_path}'.")
         return None
@@ -110,8 +107,7 @@ def extract_features_softmax(img_pil):
 # ======================================================================
 @st.cache_resource
 def load_model_svm():
-    # Sử dụng đường dẫn tuyệt đối
-    model_path = os.path.join(BASE_DIR, "svm_model.pth")
+    model_path = "svm_model.pth"
     if not os.path.exists(model_path):
         st.error(f"Lỗi Model 3: Không tìm thấy file '{model_path}'.")
         return None
@@ -141,18 +137,11 @@ def extract_features_svm(img_pil):
 # ======================================================================
 @st.cache_resource
 def load_model_rf():
-    # Sử dụng đường dẫn tuyệt đối
-    rf_path = os.path.join(BASE_DIR, "rf_clean.pkl")
-    scaler_path = os.path.join(BASE_DIR, "scaler.pkl")
-    
-    if not os.path.exists(rf_path):
-        st.error(f"Lỗi Model 4: Không tìm thấy file '{rf_path}'.")
+    rf_path = "rf_clean.pkl"
+    scaler_path = "scaler_clean.pkl"
+    if not os.path.exists(rf_path) or not os.path.exists(scaler_path):
+        st.error("Lỗi Model 4: Không tìm thấy file 'rf_clean.pkl' hoặc 'scaler_clean.pkl'.")
         return None, None
-
-    if not os.path.exists(scaler_path):
-        st.error(f"Lỗi Model 4: Không tìm thấy file '{scaler_path}'.")
-        return None, None
-
     try:
         rf = joblib.load(rf_path)
         scaler = joblib.load(scaler_path)
