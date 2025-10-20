@@ -16,6 +16,11 @@ import torch.nn as nn
 from torchvision import models
 import joblib
 
+
+
+RF_MODEL_PATH = "rf_clean.pkl"
+SCALER_PATH = "scaler_clean.pkl"
+
 # ======================================================================
 # MODEL 1: FASTER R-CNN
 # ======================================================================
