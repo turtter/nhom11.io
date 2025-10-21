@@ -270,9 +270,9 @@ if uploaded_file is not None:
                 text += "🚫 *Lỗi trong quá trình dự đoán.*"
             else:
                 label_map_display = {
-                    "Defective": ("Không hợp lệ - Điện thoại hỏng", "red"),
-                    "Non-Defective": ("Hợp lệ - Điện thoại không hỏng", "green"),
-                    "Non-Phone": ("Sản phẩm không phải là điện thoại - hãy kiểm tra lại", "orange"),
+                    "Defective": ("❌ Không hợp lệ - Điện thoại hỏng", "red"),
+                    "Non-Defective": ("✅ Hợp lệ - Điện thoại không hỏng", "green"),
+                    "Non-Phone": ("⚠️ Sản phẩm không phải là điện thoại - hãy kiểm tra lại", "orange"),
                 }
                 display_name, icon = label_map_display.get(label, (label, "❓"))
                 text += f"{display_name}"
