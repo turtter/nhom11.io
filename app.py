@@ -275,7 +275,7 @@ if uploaded_file is not None:
                     "Non-Phone": ("Sản phẩm không phải là điện thoại - hãy kiểm tra lại", "orange"),
                 }
                 display_name, icon = label_map_display.get(label, (label, "❓"))
-                text += f"{icon} {display_name}"
+                text += f"{display_name}"
             result_placeholder_4.markdown(text)
 else:
     st.info("⬆️ Hãy tải một ảnh lên để cả bốn mô hình cùng phân tích.")
