@@ -274,8 +274,6 @@ if uploaded_file is not None:
                     "Non-Defective": ("Không lỗi", "✅"),
                     "Non-Phone": ("Không phải điện thoại", "⚠️"),
                 }
-                display_name, icon = label_map_display.get(label, (label, "❓"))
-                text += f"{icon} **{display_name}** (Độ tin cậy: {confidence:.2f}%)"
             result_placeholder_4.markdown(text)
 else:
     st.info("⬆️ Hãy tải một ảnh lên để cả bốn mô hình cùng phân tích.")
