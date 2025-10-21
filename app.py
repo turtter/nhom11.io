@@ -270,12 +270,12 @@ if uploaded_file is not None:
                 text += "🚫 *Lỗi trong quá trình dự đoán.*"
             else:
                 label_map_display = {
-                    "Defective": ("Bị lỗi/Vỡ", "❌"),
-                    "Non-Defective": ("Không lỗi", "✅"),
-                    "Non-Phone": ("Không phải điện thoại", "⚠️"),
+                    "Defective": ("Không hợp lệ - Điện thoại hỏng", "red"),
+                    "Non-Defective": ("Hợp lệ - Điện thoại không hỏng", "green"),
+                    "Non-Phone": ("Sản phẩm không phải là điện thoại - hãy kiểm tra lại", "orange"),
                 }
                 display_name, icon = label_map_display.get(label, (label, "❓"))
-                text += f"{icon} **{display_name}"
+                text += f"{icon} {display_name}"
             result_placeholder_4.markdown(text)
 else:
     st.info("⬆️ Hãy tải một ảnh lên để cả bốn mô hình cùng phân tích.")
