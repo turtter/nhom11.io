@@ -267,7 +267,7 @@ if uploaded_file is not None:
             label, confidence = predict_rf(model_rf, scaler_rf, feature_extractor_rf, transform_rf, device_rf, image_pil.copy())
             text = "### 4. Model Random Forest: "
             if label is None:
-                text += "🚫 *Lỗi trong quá trình dự đoán.*"
+                text += "🚫*Lỗi trong quá trình dự đoán.*"
             else:
                 label_map_display = {
                     "Defective": ("❌ Không hợp lệ - Điện thoại hỏng", "red"),
