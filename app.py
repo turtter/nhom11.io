@@ -270,9 +270,9 @@ if uploaded_file is not None:
                     pred_index = np.argmax(probs, axis=1)[0]
                     prediction_label = inv_label_map[pred_index]
                     label_map_display = {
-                        "Defective": ("❌ Không hợp lệ - Điện thoại hỏng", "red"),
-                        "Non-Defective": ("✅ Hợp lệ - Điện thoại không hỏng", "green"),
-                        "Non-Phone": ("⚠️ Sản phẩm không phải là điện thoại - hãy kiểm tra lại", "orange"),
+                        "defective": ("❌ Không hợp lệ - Điện thoại hỏng", "red"),
+                        "non-defective": ("✅ Hợp lệ - Điện thoại không hỏng", "green"),
+                        "non-Phone": ("⚠️ Sản phẩm không phải là điện thoại - hãy kiểm tra lại", "orange"),
                     }
                     display_text, color = label_map_display.get(
                         prediction_label, (prediction_label, "black")
