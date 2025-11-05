@@ -223,33 +223,6 @@ if uploaded_file is not None:
             else: text += "⚠️ **KHÔNG PHÁT HIỆN ĐT**"
             result_placeholder_1.markdown(text)
 
-    # # --- Xử lý Model 2: Softmax Regression ---
-    # if model_data_softmax:
-    #     with st.spinner("Model 2 (Softmax regression) đang xử lý..."):
-    #         features = extract_features_softmax(image_pil.copy())
-    #         text = "### 2. Model Softmax regression: "
-    #         if features is None: text += "🚫 *Không thể xử lý ảnh này.*"
-    #         else:
-    #             W, b, mean, std = model_data_softmax["W"], model_data_softmax["b"], model_data_softmax["mean"], model_data_softmax["std"]
-    #             inv_label_map = {v: k for k, v in model_data_softmax["label_map"].items()}
-    #             features_2d = features.reshape(1, -1)
-    #             if features_2d.shape[1] != mean.shape[1]: text += f"🚫 *Lỗi kích thước!*"
-    #             else:
-    #                 features_std = (features_2d - mean) / (std + 1e-12)
-    #                 scores = features_std @ W + b
-    #                 probs = softmax_np(scores)
-    #                 pred_index = np.argmax(probs, axis=1)[0]
-    #                 result = ""
-    #                 prediction_label = inv_label_map[pred_index]
-    #                 label_map_display = {
-    #                     "Defective": ("❌ Không hợp lệ - Điện thoại hỏng", "red"),
-    #                     "Non-Defective": ("✅ Hợp lệ - Điện thoại không hỏng", "green"),
-    #                     "Non-Phone": ("⚠️ Sản phẩm không phải là điện thoại - hãy kiểm tra lại", "orange"),
-    #                 }
-
-    #                 probability = np.max(probs) * 100
-    #                 text += f"**'{prediction_label}'** (Độ tin cậy: {probability:.2f}%)"
-    #         result_placeholder_2.markdown(text)
     if model_data_softmax:
         with st.spinner("Model 2 (Softmax regression) đang xử lý..."):
             features = extract_features_softmax(image_pil.copy())
