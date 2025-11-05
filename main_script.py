@@ -12,7 +12,7 @@ import csv
 
 
 # ==============================
-# 1️⃣ Load model (ĐÃ SỬA: num_classes = 4)
+# 1️ Load model (ĐÃ SỬA: num_classes = 4)
 # ==============================
 def load_model(weight_path="fasterrcnn_phone_defect1910.pth"):
     """
@@ -26,7 +26,7 @@ def load_model(weight_path="fasterrcnn_phone_defect1910.pth"):
     )
     in_features = model.roi_heads.box_predictor.cls_score.in_features
 
-    # ✅ 3 lớp + background
+    #  3 lớp + background
     num_classes = 4
     model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
 
@@ -52,7 +52,7 @@ def crop_with_margin(img, box, margin_ratio=0.05):
 
 
 # ======================================================
-# 3️⃣ Hàm xử lý ảnh và lưu kết quả (CẬP NHẬT 3 LỚP)
+# 3️ Hàm xử lý ảnh và lưu kết quả (CẬP NHẬT 3 LỚP)
 # ======================================================
 def process_image(model, image_path, device, score_thresh=0.6):
     img = cv2.imread(image_path)
@@ -163,7 +163,7 @@ def process_image(model, image_path, device, score_thresh=0.6):
 
 
 # ==============================
-# 4️⃣ Chạy kiểm tra nhanh (tùy chọn)
+# 4️ Chạy kiểm tra nhanh (tùy chọn)
 # ==============================
 def main():
     model_path = "fasterrcnn_phone_defect1910.pth"  # chỉnh đúng đường dẫn model
