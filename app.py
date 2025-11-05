@@ -272,7 +272,7 @@ if uploaded_file is not None:
                     label_map_display = {
                         "defective": ("❌ Không hợp lệ - Điện thoại hỏng", "red"),
                         "non-defective": ("✅ Hợp lệ - Điện thoại không hỏng", "green"),
-                        "non-Phone": ("⚠️ Sản phẩm không phải là điện thoại - hãy kiểm tra lại", "orange"),
+                        "non-phone": ("⚠️ Sản phẩm không phải là điện thoại - hãy kiểm tra lại", "orange"),
                     }
                     display_text, color = label_map_display.get(
                         prediction_label, (prediction_label, "black")
