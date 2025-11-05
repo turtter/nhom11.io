@@ -279,7 +279,6 @@ if uploaded_file is not None:
                     )
                     probability = np.max(probs) * 100
                     text += f"<span style='color:{color}; font-weight:bold;'>{display_text}</span>"
-                    text += f" &nbsp; (Độ tin cậy: {probability:.2f}%)"
             result_placeholder_2.markdown(text, unsafe_allow_html=True)
 
 
